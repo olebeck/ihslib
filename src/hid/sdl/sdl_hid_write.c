@@ -68,17 +68,17 @@ typedef union __attribute__((__packed__))  WriteCommand {
     ByteCommand byte;
 } WriteCommand;
 
-static void HandleRumble(IHS_HIDDeviceSDL *sdl, const RumbleCommand *rumble);
+static void HandleRumble(IHS_HIDDeviceSDL *sdl, const RumbleCommand rumble);
 
-static void HandleRumbleTriggers(IHS_HIDDeviceSDL *sdl, const RumbleCommand *rumble);
+static void HandleRumbleTriggers(IHS_HIDDeviceSDL *sdl, const RumbleCommand rumble);
 
-static void HandleSetLED(IHS_HIDDeviceSDL *sdl, const LEDCommand *led);
+static void HandleSetLED(IHS_HIDDeviceSDL *sdl, const LEDCommand led);
 
-static void HandleSetSensorEnabled(IHS_HIDDeviceSDL *sdl, const ByteCommand *byte);
+static void HandleSetSensorEnabled(IHS_HIDDeviceSDL *sdl, const ByteCommand byte);
 
-static void HandleSetPS5Rumble(IHS_HIDDeviceSDL *sdl, const ByteCommand *byte);
+static void HandleSetPS5Rumble(IHS_HIDDeviceSDL *sdl, const ByteCommand byte);
 
-static void HandleSetPlayerIndex(IHS_HIDDeviceSDL *sdl, const ByteCommand *byte);
+static void HandleSetPlayerIndex(IHS_HIDDeviceSDL *sdl, const ByteCommand byte);
 
 int IHS_HIDDeviceSDLWrite(IHS_HIDDevice *device, const uint8_t *data, size_t dataLen) {
     IHS_HIDDeviceSDL *sdl = (IHS_HIDDeviceSDL *) device;
@@ -88,19 +88,19 @@ int IHS_HIDDeviceSDLWrite(IHS_HIDDevice *device, const uint8_t *data, size_t dat
     const WriteCommand *command = (const WriteCommand *) data;
     switch (command->type) {
         case COMMAND_RUMBLE: {
-            HandleRumble(sdl, &command->rumble);
+            HandleRumble(sdl, command->rumble);
             break;
         }
         case COMMAND_SET_LED: {
-            HandleSetLED(sdl, &command->led);
+            HandleSetLED(sdl, command->led);
             break;
         }
         case COMMAND_RUMBLE_TRIGGERS: {
-            HandleRumbleTriggers(sdl, &command->rumble);
+            HandleRumbleTriggers(sdl, command->rumble);
             break;
         }
         case COMMAND_SET_SENSOR_ENABLED: {
-            HandleSetSensorEnabled(sdl, &command->byte);
+            HandleSetSensorEnabled(sdl, command->byte);
             break;
         }
         case COMMAND_SET_REQUESTED_REPORT_VERSION: {
@@ -108,11 +108,11 @@ int IHS_HIDDeviceSDLWrite(IHS_HIDDevice *device, const uint8_t *data, size_t dat
             break;
         }
         case COMMAND_SET_PS5_RUMBLE: {
-            HandleSetPS5Rumble(sdl, &command->byte);
+            HandleSetPS5Rumble(sdl, command->byte);
             break;
         }
         case COMMAND_SET_PLAYER_INDEX: {
-            HandleSetPlayerIndex(sdl, &command->byte);
+            HandleSetPlayerIndex(sdl, command->byte);
             break;
         }
         default:
@@ -121,25 +121,25 @@ int IHS_HIDDeviceSDLWrite(IHS_HIDDevice *device, const uint8_t *data, size_t dat
     return 0;
 }
 
-void HandleRumble(IHS_HIDDeviceSDL *sdl, const RumbleCommand *rumble) {
+void HandleRumble(IHS_HIDDeviceSDL *sdl, const RumbleCommand rumble) {
 #if IHS_HID_SDL_TARGET_ATLEAST(2, 0, 9)
-    IHS_HIDDeviceLog(&sdl->base, IHS_LogLevelDebug, "HID.SDL", "Rumble(dur=%u, lo=%u, hi=%u)", rumble->durationMs,
-                     rumble->lowFreq, rumble->highFreq);
-    SDL_GameControllerRumble(sdl->controller, rumble->lowFreq, rumble->highFreq, rumble->durationMs);
+    IHS_HIDDeviceLog(&sdl->base, IHS_LogLevelDebug, "HID.SDL", "Rumble(dur=%u, lo=%u, hi=%u)", rumble.durationMs,
+                     rumble.lowFreq, rumble.highFreq);
+    SDL_GameControllerRumble(sdl->controller, rumble.lowFreq, rumble.highFreq, rumble.durationMs);
 #else
     if (sdl->haptic == NULL) {
         IHS_HIDDeviceLog(&sdl->base, IHS_LogLevelDebug, "HID.SDL",
-                         "Rumble(dur=%u, lo=%u, hi=%u) (haptic not supported)", rumble->durationMs, rumble->lowFreq,
-                         rumble->highFreq);
+                         "Rumble(dur=%u, lo=%u, hi=%u) (haptic not supported)", rumble.durationMs, rumble.lowFreq,
+                         rumble.highFreq);
         return;
     }
-    IHS_HIDDeviceLog(&sdl->base, IHS_LogLevelDebug, "HID.SDL", "Rumble(dur=%u, lo=%u, hi=%u)", rumble->durationMs,
-                     rumble->lowFreq, rumble->highFreq);
+    IHS_HIDDeviceLog(&sdl->base, IHS_LogLevelDebug, "HID.SDL", "Rumble(dur=%u, lo=%u, hi=%u)", rumble.durationMs,
+                     rumble.lowFreq, rumble.highFreq);
     SDL_HapticEffect effect = {.leftright = {
             .type = SDL_HAPTIC_LEFTRIGHT,
-            .length = rumble->durationMs,
-            .large_magnitude = rumble->lowFreq / 2,
-            .small_magnitude = rumble->highFreq / 2,
+            .length = rumble.durationMs,
+            .large_magnitude = rumble.lowFreq / 2,
+            .small_magnitude = rumble.highFreq / 2,
     }};
     if (sdl->hapticEffectId != -1) {
         SDL_HapticUpdateEffect(sdl->haptic, sdl->hapticEffectId, &effect);
@@ -152,37 +152,37 @@ void HandleRumble(IHS_HIDDeviceSDL *sdl, const RumbleCommand *rumble) {
 #endif
 }
 
-static void HandleRumbleTriggers(IHS_HIDDeviceSDL *sdl, const RumbleCommand *rumble) {
+static void HandleRumbleTriggers(IHS_HIDDeviceSDL *sdl, const RumbleCommand rumble) {
     IHS_HIDDeviceLog(&sdl->base, IHS_LogLevelDebug, "HID.SDL", "RumbleTriggers(dur=%u, lo=%u, hi=%u)",
-                     rumble->durationMs, rumble->lowFreq, rumble->highFreq);
+                     rumble.durationMs, rumble.lowFreq, rumble.highFreq);
 #if IHS_HID_SDL_TARGET_ATLEAST(2, 0, 14)
-    SDL_GameControllerRumbleTriggers(sdl->controller, rumble->lowFreq, rumble->highFreq, rumble->durationMs);
+    SDL_GameControllerRumbleTriggers(sdl->controller, rumble.lowFreq, rumble.highFreq, rumble.durationMs);
 #endif
 }
 
-static void HandleSetLED(IHS_HIDDeviceSDL *sdl, const LEDCommand *led) {
+static void HandleSetLED(IHS_HIDDeviceSDL *sdl, const LEDCommand led) {
 #if IHS_HID_SDL_TARGET_ATLEAST(2, 0, 14)
-    SDL_GameControllerSetLED(sdl->controller, led->r, led->g, led->b);
+    SDL_GameControllerSetLED(sdl->controller, led.r, led.g, led.b);
 #endif
 }
 
-static void HandleSetSensorEnabled(IHS_HIDDeviceSDL *sdl, const ByteCommand *byte) {
+static void HandleSetSensorEnabled(IHS_HIDDeviceSDL *sdl, const ByteCommand byte) {
 #if IHS_HID_SDL_TARGET_ATLEAST(2, 0, 14)
-    SDL_GameControllerSetSensorEnabled(sdl->controller, SDL_SENSOR_ACCEL, byte->value);
-    SDL_GameControllerSetSensorEnabled(sdl->controller, SDL_SENSOR_GYRO, byte->value);
+    SDL_GameControllerSetSensorEnabled(sdl->controller, SDL_SENSOR_ACCEL, byte.value);
+    SDL_GameControllerSetSensorEnabled(sdl->controller, SDL_SENSOR_GYRO, byte.value);
 #endif
 }
 
-static void HandleSetPS5Rumble(IHS_HIDDeviceSDL *sdl, const ByteCommand *byte) {
+static void HandleSetPS5Rumble(IHS_HIDDeviceSDL *sdl, const ByteCommand byte) {
     (void) sdl;
 #if SDL_VERSION_ATLEAST(2, 0, 16)
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS5_RUMBLE, byte->value ? "1" : "0");
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS5_RUMBLE, byte.value ? "1" : "0");
 #endif
 }
 
-static void HandleSetPlayerIndex(IHS_HIDDeviceSDL *sdl, const ByteCommand *byte) {
+static void HandleSetPlayerIndex(IHS_HIDDeviceSDL *sdl, const ByteCommand byte) {
 #if IHS_HID_SDL_TARGET_ATLEAST(2, 0, 9)
-    SDL_GameControllerSetPlayerIndex(sdl->controller, byte->value);
+    //SDL_GameControllerSetPlayerIndex(sdl->controller, byte->value);
 #endif
-    sdl->playerIndex = byte->value;
+    sdl->playerIndex = byte.value;
 }

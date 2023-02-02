@@ -95,6 +95,10 @@ add_subdirectory(src/platforms)
 target_include_directories(ihs-platforms PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(ihslib PRIVATE ihs-platforms)
 
+if(WINRT)
+    target_link_libraries(ihslib PRIVATE pthread) # clock_gettime
+endif()
+
 if (MBEDTLS_FOUND)
     target_sources(ihslib PRIVATE src/crypto/impl_mbedtls.c)
     target_include_directories(ihslib PRIVATE SYSTEM ${MBEDTLS_INCLUDE_DIRS})

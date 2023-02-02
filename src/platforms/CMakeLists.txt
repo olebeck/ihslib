@@ -15,3 +15,7 @@ else ()
     target_include_directories(ihs-platforms PRIVATE SYSTEM ${SDL2_NET_INCLUDE_DIRS})
     target_link_libraries(ihs-platforms PUBLIC ${SDL2_NET_LIBRARIES})
 endif ()
+
+if(WINRT)
+    target_sources(ihs-platforms PRIVATE ihs_ip_win.c)
+endif()

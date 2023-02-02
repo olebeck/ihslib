@@ -43,7 +43,7 @@ static void AddressFromSDL(IHS_SocketAddress *ihs, const IPaddress *sdl);
 
 static void AddressToSDL(const IHS_SocketAddress *ihs, IPaddress *sdl);
 
-IHS_UDPSocket *IHS_UDPSocketOpen() {
+IHS_UDPSocket *IHS_UDPSocketOpen(bool broadcast) {
     IHS_UDPSocket *socket = SDL_malloc(sizeof(IHS_UDPSocket));
     SDL_zerop(socket);
     socket->sockets = SDLNet_AllocSocketSet(2);
@@ -96,16 +96,25 @@ int IHS_UDPSocketReceive(IHS_UDPSocket *socket, IHS_UDPPacket *packet) {
     return ret;
 }
 
-int IHS_UDPSocketSend(IHS_UDPSocket *socket, IHS_UDPPacket *packet) {
+bool IHS_UDPSocketSend(IHS_UDPSocket *socket, const IHS_UDPPacket *packet) {
     UDPpacket sdlPacket;
     SDL_memset(&sdlPacket, 0, sizeof(UDPpacket));
     AddressToSDL(&packet->address, &sdlPacket.address);
     sdlPacket.data = IHS_BufferPointer(&packet->buffer);
     sdlPacket.len = (int) packet->buffer.size;
-    return SDLNet_UDP_Send(socket->socket, -1, &sdlPacket);
+    return SDLNet_UDP_Send(socket->socket, -1, &sdlPacket) > 0;
 }
 
-int IHS_UDPSocketUnblock(IHS_UDPSocket *socket) {
+bool IHS_UDPSocketSetBlocking(IHS_UDPSocket *socket, bool blocking) {
+    SDL_assert_always(socket != NULL);
+    return true;
+}
+
+bool IHS_UDPSocketSetRecvTimeout(IHS_UDPSocket *socket, uint32_t timeoutUs) {
+    return true;
+}
+
+bool IHS_UDPSocketUnblock(IHS_UDPSocket *socket) {
     SDL_assert_always(socket != NULL);
     UDPpacket sdlPacket;
     SDL_memset(&sdlPacket, 0, sizeof(UDPpacket));
@@ -114,7 +123,7 @@ int IHS_UDPSocketUnblock(IHS_UDPSocket *socket) {
     static Uint8 empty[1] = {0};
     sdlPacket.data = empty;
     sdlPacket.len = 1;
-    return SDLNet_UDP_Send(socket->unblock, -1, &sdlPacket);
+    return SDLNet_UDP_Send(socket->unblock, -1, &sdlPacket) > 0;
 }
 
 static void AddressFromSDL(IHS_SocketAddress *ihs, const IPaddress *sdl) {
